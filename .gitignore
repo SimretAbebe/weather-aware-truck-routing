@@ -44,3 +44,4 @@ Desktop.ini
 # Node (just in case)
 node_modules/
 .next/backend/scripts/
+backend/scripts/
