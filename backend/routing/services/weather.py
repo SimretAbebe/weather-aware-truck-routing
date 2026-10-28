@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from concurrent.futures import ThreadPoolExecutor
 
 import requests
 
@@ -17,29 +18,31 @@ class WeatherSample:
     forecast_time: datetime
     beyond_forecast: bool  # ETA fell outside the available forecast window
 
+def _fetch_chunk(chunk: list[tuple[float, float]]) -> list[dict]:
+    r = requests.get(
+        FORECAST_URL,
+        params={
+            "latitude": ",".join(f"{lat:.4f}" for _, lat in chunk),
+            "longitude": ",".join(f"{lon:.4f}" for lon, _ in chunk),
+            "hourly": HOURLY_VARS,
+            "wind_speed_unit": "mph",
+            "precipitation_unit": "inch",
+            "timezone": "GMT",
+            "forecast_days": 16,
+        },
+        timeout=30,
+    )
+    r.raise_for_status()
+    data = r.json()
+    return data if isinstance(data, list) else [data]
+
 
 def fetch_hourly(points: list[tuple[float, float]]) -> list[dict]:
     """points are (lon, lat). Returns one hourly-forecast dict per point, in order."""
-    results: list[dict] = []
-    for i in range(0, len(points), CHUNK):
-        chunk = points[i : i + CHUNK]
-        r = requests.get(
-            FORECAST_URL,
-            params={
-                "latitude": ",".join(f"{lat:.4f}" for _, lat in chunk),
-                "longitude": ",".join(f"{lon:.4f}" for lon, _ in chunk),
-                "hourly": HOURLY_VARS,
-                "wind_speed_unit": "mph",
-                "precipitation_unit": "inch",
-                "timezone": "GMT",
-                "forecast_days": 16,
-            },
-            timeout=30,
-        )
-        r.raise_for_status()
-        data = r.json()
-        results.extend(data if isinstance(data, list) else [data])
-    return results
+    chunks = [points[i : i + CHUNK] for i in range(0, len(points), CHUNK)]
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        parts = list(pool.map(_fetch_chunk, chunks))
+    return [item for part in parts for item in part]
 
 
 def _parse(t: str) -> datetime:
