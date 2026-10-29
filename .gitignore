@@ -1,47 +1,23 @@
 # Python
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-*.egg-info/
-*.egg
-dist/
-build/
-
-# Virtual env
 .venv/
 venv/
-env/
-
-# Django stuff
+__pycache__/
+*.pyc
+.pytest_cache/
 db.sqlite3
-*.log
-local_settings.py
-/backend/staticfiles/
-/backend/media/
 
-# Env vars - never commit these!
+# Secrets
 .env
 .env.*
 !.env.example
 
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
+# Node
+node_modules/
+dist/
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*~
-
-# OS
+# Scratch and OS/editor files
+backend/scripts/
 .DS_Store
 Thumbs.db
-Desktop.ini
-
-# Node (just in case)
-node_modules/
-.next/backend/scripts/
-backend/scripts/
+.vscode/
+.idea/
