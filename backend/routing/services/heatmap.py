@@ -7,10 +7,10 @@ from .sampling import sample_checkpoints
 from .weather import fetch_hourly, weather_at
 
 HEATMAP_HOURS = 48
-GRID_DEG = 0.2  # ~14 miles; one sample point per grid cell avoids overlapping routes
+GRID_DEG = 0.25  # ~17 miles
 
 
-def corridor_points(routes: list[Route], start: datetime, step_mi: float = 20.0):
+def corridor_points(routes: list[Route], start: datetime, step_mi: float = 25.0):
     seen, pts = set(), []
     for r in routes:
         for cp in sample_checkpoints(r.coords, r.duration_h, start, step_mi):
