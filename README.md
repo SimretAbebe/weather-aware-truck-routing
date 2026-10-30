@@ -2,7 +2,7 @@
 
 A web app that helps a truck driver choose the safest route based on **weather, load weight, and travel time**.
 
-- **Live app:** <your-vercel-link>
+- **Live app:** https://weather-aware-truck-routing-snowy.vercel.app
 - **Walkthrough video (Loom):** <your-loom-link>
 
 > The backend runs on a free server that sleeps when idle. The first request can take up to a minute. After that it is fast.
