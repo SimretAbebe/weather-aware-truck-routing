@@ -52,9 +52,13 @@ def analyze(request):
         fh = pool.submit(build_heatmap, routes, d["departure"], d["load_lb"], fetch_hourly)
         try:
             analyses = fa.result()
-        except requests.RequestException:
-            return Response({"detail": "Weather service unavailable. Please try again."},
-                            status=status.HTTP_502_BAD_GATEWAY)
+        except requests.RequestException as e:
+            code = getattr(getattr(e, "response", None), "status_code", None)
+            log.error("weather fetch failed: %s (status=%s)", repr(e), code)
+            return Response(
+                {"detail": f"Weather service unavailable (cause: {code or type(e).__name__}). Please try again."},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )   
         try:
             heatmap = fh.result()
         except Exception:  # the heatmap is secondary; don't lose the analysis over it
