@@ -56,9 +56,9 @@ def analyze(request):
             code = getattr(getattr(e, "response", None), "status_code", None)
             log.error("weather fetch failed: %s (status=%s)", repr(e), code)
             return Response(
-                {"detail": f"Weather service unavailable (cause: {code or type(e).__name__}). Please try again."},
+                {"detail": f"Weather service unavailable ({str(e)[:160]}). Please try again."},
                 status=status.HTTP_502_BAD_GATEWAY,
-            )   
+            ) 
         try:
             heatmap = fh.result()
         except Exception:  # the heatmap is secondary; don't lose the analysis over it

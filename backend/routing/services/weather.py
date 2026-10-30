@@ -10,7 +10,7 @@ FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
 HOURLY_VARS = "wind_speed_10m,wind_gusts_10m,rain,showers,snowfall"
 CHUNK = 50                    # coordinates per request, keeps the URL short
 RETRYABLE = {429, 500, 502, 503, 504}
-RETRY_DELAYS = (3, 8, 20)     # seconds between attempts
+RETRY_DELAYS = (5, 15, 30)
 CACHE_TTL = 30 * 60           # seconds
 CACHE_MAX = 4000              # entries; cleared wholesale if exceeded
 
@@ -18,6 +18,15 @@ CACHE_MAX = 4000              # entries; cleared wholesale if exceeded
 # the weather models' own grid, so nearby checkpoints share one forecast.
 _cache: dict[tuple[float, float], tuple[float, dict]] = {}
 _lock = threading.Lock()
+class WeatherAPIError(requests.RequestException):
+    """Weather provider error that carries the provider's own explanation."""
+
+
+def _reason(r) -> str:
+    try:
+        return str(r.json().get("reason", ""))
+    except Exception:
+        return getattr(r, "text", "")[:200]
 
 
 @dataclass(frozen=True)
@@ -50,7 +59,8 @@ def _fetch_chunk(chunk: list[tuple[float, float]]) -> list[dict]:
         if r.status_code in RETRYABLE and delay is not None:
             time.sleep(delay)
             continue
-        r.raise_for_status()
+        if r.status_code >= 400:
+            raise WeatherAPIError(f"Open-Meteo {r.status_code}: {_reason(r)}", response=r)
         data = r.json()
         return data if isinstance(data, list) else [data]
 
